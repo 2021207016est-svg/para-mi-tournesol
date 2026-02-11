@@ -3,13 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nuestra Constelación - Mon Tournesol</title>
+    <title>Mon Tournesol - Gaby</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --line-color: linear-gradient(to left top, #82ff86 20%, #144425, #104e1c);
+            --flower-center: radial-gradient(circle, #000, #ff5e00);
+            --leaf-color: radial-gradient(circle, #82ff86, #104e1c);
+            --petal-color: radial-gradient(circle, #ff5e00, #ffbb00);
+        }
 
         * { 
             touch-action: manipulation; 
             -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+            margin: 0; padding: 0;
         }
 
         body {
@@ -19,7 +28,6 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
             color: #ffb700;
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
@@ -33,79 +41,57 @@
             max-width: 350px;
             aspect-ratio: 1/1;
             box-shadow: 0 0 20px rgba(255, 183, 0, 0.4);
+            z-index: 10;
         }
 
-        canvas {
-            image-rendering: pixelated;
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        canvas { image-rendering: pixelated; display: block; width: 100%; height: 100%; }
 
-        #ui {
-            position: absolute;
-            top: -35px;
-            width: 100%;
-            text-align: center;
-            font-size: 9px;
-            color: #fff;
-        }
+        #ui { position: absolute; top: -35px; width: 100%; text-align: center; font-size: 9px; color: #fff; }
 
         #intro-box, #message-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.96);
-            color: #4a1d4d;
-            padding: 20px;
-            text-align: center;
-            border: 4px solid #ffb700;
-            width: 85%;
-            z-index: 20;
-            box-shadow: 6px 6px 0px #4a1d4d;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.96); color: #4a1d4d;
+            padding: 20px; text-align: center; border: 4px solid #ffb700;
+            width: 85%; z-index: 20; box-shadow: 6px 6px 0px #4a1d4d;
         }
 
         p { line-height: 1.8; font-size: 9px; margin-bottom: 12px; }
 
         button {
-            font-family: 'Press Start 2P', cursive;
-            padding: 10px;
-            cursor: pointer;
-            border: 3px solid #4a1d4d;
-            background: #ffb700;
-            color: #fff;
-            font-size: 8px;
-            margin: 5px;
+            font-family: 'Press Start 2P', cursive; padding: 10px; cursor: pointer;
+            border: 3px solid #4a1d4d; background: #ffb700; color: #fff; font-size: 8px; margin: 5px;
         }
 
-        #controls {
-            display: grid;
-            grid-template-areas: 
-                ". up ."
-                "left . right"
-                ". down .";
-            gap: 8px;
-            margin-top: 25px;
-        }
+        #controls { display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 8px; margin-top: 25px; z-index: 10; }
 
         .btn-touch {
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 183, 0, 0.2);
-            border: 2px solid #ffb700;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffb700;
-            font-size: 18px;
+            width: 55px; height: 55px; background: rgba(255, 183, 0, 0.2);
+            border: 2px solid #ffb700; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; color: #ffb700; font-size: 18px;
         }
 
-        .btn-touch:active { background: rgba(255, 183, 0, 0.5); }
+        /* --- ESTILOS GIRASOL ANIMADO --- */
+        #final-flower { display: none; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100vw; height: 100vh; pointer-events: none; }
+        
+        .flower_wrapper { position: absolute; left: 50%; bottom: 5vmin; transform: translateX(-50%); animation: moving-flower 4s linear infinite; }
+        .flower_stem { width: 2vmin; height: 55vmin; background-image: var(--line-color); border-radius: 4vmin; }
+        .flower_center { position: absolute; top: 0; left: 50%; z-index: 5; transform: translateX(-50%); width: 15vmin; height: 15vmin; border-radius: 50%; background: var(--flower-center); animation: open-flower-middle 2s backwards; }
+        .flower_petal { position: absolute; left: 50%; z-index: 3; bottom: 48vmin; transform: translateX(-50%); width: 6vmin; height: 16vmin; background: var(--petal-color); clip-path: ellipse(50% 50% at 50% 50%); transform-origin: center bottom; animation: open-flower 2s 1s backwards; }
+        .flower_leaf { position: absolute; left: 50%; width: 7vmin; height: 14vmin; background: var(--leaf-color); border-radius: 10vmin 2vmin; transform-origin: center bottom; }
+        .flower_leaf-1 { bottom: 15vmin; transform: translateX(20%) rotate(60deg); }
+        .flower_leaf-2 { bottom: 20vmin; transform: translateX(-120%) rotate(-60deg); }
 
+        @keyframes open-flower { 0% { transform: translateX(-50%) scale(0); } }
+        @keyframes open-flower-middle { 0% { transform: translateX(-50%) scale(0); opacity: 0; } }
+        @keyframes moving-flower { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-50%) rotate(2deg); } }
+        
         .heart-rain { position: absolute; pointer-events: none; z-index: 100; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+        @keyframes fadeInDown {
+            0% { opacity: 0; transform: translate(-50%, -100%); }
+            100% { opacity: 1; transform: translate(-50%, 0); }
+        }
     </style>
 </head>
 <body>
@@ -116,8 +102,7 @@
         
         <div id="intro-box">
             <h2 style="font-size: 11px;">PARA: GABY</h2>
-            <p>Ma petite Gaby, en el jardín infinito del espacio, eras la única semilla de luz.</p>
-            <p>Como un girasol busca el sol, mi alma solo sabe girar hacia ti.</p>
+            <p>Mon tournesooool, en el jardín infinito del espacio, eras la única semilla de luz.</p>
             <p>Atrapa los 10 pétalos dorados para que mi mundo vuelva a florecer.</p>
             <button onclick="startGame()">EMPEZAR VIAJE</button>
         </div>
@@ -125,7 +110,6 @@
         <div id="message-box" style="display:none;">
             <h2 style="font-size: 11px;">¡FLORECISTE EN MI CORAZÓN!</h2>
             <p>Mon Tournesol, gracias por iluminar mi galaxia con tu sonrisa.</p>
-            <p>No necesito estrellas si te tengo a mi lado.</p>
             <p>Gaby, ¿me harías el honor de ser mi San Valentín?</p>
             <button onclick="responder()">¡OUI, MIL VECES SÍ! 🌻</button>
             <button id="btnNo" ontouchstart="escapar()" onmouseover="escapar()">NO</button>
@@ -139,26 +123,42 @@
         <div class="btn-touch" style="grid-area: down" id="down">↓</div>
     </div>
 
+    <div id="final-flower">
+        <div class="flower_wrapper">
+            <div class="flower_stem"></div>
+            <div class="flower_center"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(0deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(30deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(60deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(90deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(120deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(150deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(180deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(210deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(240deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(270deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(300deg)"></div>
+            <div class="flower_petal" style="transform: translateX(-50%) rotate(330deg)"></div>
+            <div class="flower_leaf flower_leaf-1"></div>
+            <div class="flower_leaf flower_leaf-2"></div>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
-        
-        let score = 0;
-        let gameActive = false;
+        let score = 0; let gameActive = false;
         let stars = Array.from({length: 40}, () => ({ x: Math.random()*400, y: Math.random()*400, size: Math.random()*2 }));
-
-        const player = { x: 190, y: 190, size: 28, speed: 5 };
+        const player = { x: 190, y: 190, size: 28, speed: 6 };
         let goal = { x: 100, y: 100, size: 24 };
-        const keys = {};
-        const touchKeys = { 'ArrowUp': false, 'ArrowDown': false, 'ArrowLeft': false, 'ArrowRight': false };
+        const keys = {}; const touchKeys = { 'ArrowUp': false, 'ArrowDown': false, 'ArrowLeft': false, 'ArrowRight': false };
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let musicPlaying = false;
 
         function playSound(f, t, d, v = 0.1) {
-            const o = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
             o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
             g.gain.setValueAtTime(v, audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
@@ -181,9 +181,6 @@
         setupBtn('up', 'ArrowUp'); setupBtn('down', 'ArrowDown');
         setupBtn('left', 'ArrowLeft'); setupBtn('right', 'ArrowRight');
 
-        window.addEventListener('keydown', e => keys[e.code] = true);
-        window.addEventListener('keyup', e => keys[e.code] = false);
-
         function drawHeart(x, y, size, color) {
             ctx.fillStyle = color; const p = size / 8;
             const map = [[0,1,1,0,0,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0],[0,0,1,1,1,1,0,0],[0,0,0,1,1,0,0,0]];
@@ -192,8 +189,7 @@
 
         function drawSunflower(x, y, size) {
             const p = size / 8;
-            ctx.fillStyle = "#FFD700"; 
-            ctx.fillRect(x+p*2, y, p*4, p); ctx.fillRect(x, y+p*2, p, p*4); 
+            ctx.fillStyle = "#FFD700"; ctx.fillRect(x+p*2, y, p*4, p); ctx.fillRect(x, y+p*2, p, p*4); 
             ctx.fillRect(x+p*7, y+p*2, p, p*4); ctx.fillRect(x+p*2, y+p*7, p*4, p);
             ctx.fillStyle = "#5D4037"; ctx.fillRect(x+p*2, y+p*2, p*4, p*4);
         }
@@ -206,14 +202,10 @@
             if ((keys['ArrowRight'] || touchKeys['ArrowRight']) && player.x < 370) player.x += player.speed;
 
             if (Math.abs(player.x - goal.x) < 25 && Math.abs(player.y - goal.y) < 25) {
-                score++;
-                playSound(523, 'square', 0.2);
-                scoreElement.innerText = score * 10;
+                score++; playSound(523, 'square', 0.2); scoreElement.innerText = score * 10;
                 goal.x = Math.random() * 340; goal.y = Math.random() * 340;
                 if (score >= 10) { 
-                    gameActive = false; 
-                    musicPlaying = false;
-                    playSound(659, 'square', 0.5);
+                    gameActive = false; musicPlaying = false; playSound(659, 'square', 0.5);
                     document.getElementById('message-box').style.display = 'block'; 
                 }
             }
@@ -222,17 +214,14 @@
         function animate() {
             ctx.fillStyle = '#1a0a1d'; ctx.fillRect(0, 0, 400, 400);
             ctx.fillStyle = "#fff"; stars.forEach(s => { ctx.globalAlpha = Math.abs(Math.sin(Date.now()*0.002)); ctx.fillRect(s.x, s.y, s.size, s.size); });
-            ctx.globalAlpha = 1.0;
-            drawSunflower(goal.x, goal.y, goal.size);
-            drawHeart(player.x, player.y, player.size, '#ff4d6d');
+            ctx.globalAlpha = 1.0; drawSunflower(goal.x, goal.y, goal.size); drawHeart(player.x, player.y, player.size, '#ff4d6d');
             update(); requestAnimationFrame(animate);
         }
 
         function startGame() {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             if(!musicPlaying) { musicPlaying = true; playMusic(0); }
-            document.getElementById('intro-box').style.display = 'none';
-            gameActive = true;
+            document.getElementById('intro-box').style.display = 'none'; gameActive = true;
         }
         
         function escapar() {
@@ -242,14 +231,26 @@
         }
 
         function responder() {
-            musicPlaying = false;
-            playSound(523, 'square', 0.2); setTimeout(()=>playSound(659, 'square', 0.2), 100);
-            document.getElementById('message-box').innerHTML = "<h2 style='font-size:12px'>¡SABÍA QUE NUESTRAS ALMAS ESTABAN CONECTADAS! ❤️</h2><p>Te amo, Gaby. Prepárate para la mejor cita de la historia.</p>";
-            for(let i=0; i<40; i++) {
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('final-flower').style.display = 'block';
+            
+            const finalCard = document.createElement('div');
+            finalCard.innerHTML = `
+                <h2 style="font-size: 14px; margin-bottom: 15px; color: #ff4d6d;">¡EL JARDÍN ESTÁ COMPLETO! ❤️</h2>
+                <p style="font-size: 10px; line-height: 1.6;">Te amoooo mi bebé. Gracias por todo lo que me das, mi corazón de melón.</p>
+                <p style="font-size: 9px; margin-top: 10px; color: #5D4037;">¡Gracias por ser mi San Valentín! 🌻</p>
+            `;
+            finalCard.style.cssText = "position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: rgba(255, 255, 255, 0.95); padding: 25px; border: 5px solid #ffb700; border-radius: 15px; text-align: center; z-index: 2000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: #4a1d4d; animation: fadeInDown 1.5s ease-out;";
+            document.body.appendChild(finalCard);
+
+            for(let i=0; i<50; i++) {
                 const h = document.createElement('div'); h.className = 'heart-rain';
                 h.innerHTML = i%2==0?'🌻':'❤️'; h.style.left = Math.random()*100+'vw';
-                h.style.animationDuration = (Math.random()*2+2)+'s'; document.body.appendChild(h);
+                h.style.fontSize = (Math.random()*20+15)+'px'; h.style.animationDuration = (Math.random()*2+3)+'s';
+                document.body.appendChild(h);
             }
+            playSound(523, 'square', 0.2); setTimeout(()=>playSound(659, 'square', 0.2), 150); setTimeout(()=>playSound(783, 'square', 0.4), 300);
         }
         animate();
     </script>
