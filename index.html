@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nuestra Constelación - Mon Tournesol</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * { 
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: radial-gradient(circle, #4a1d4d, #1a0a1d);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #ffb700;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            border: 4px solid #ffb700;
+            background-color: #1a0a1d;
+            width: 85vw;
+            max-width: 350px;
+            aspect-ratio: 1/1;
+            box-shadow: 0 0 20px rgba(255, 183, 0, 0.4);
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui {
+            position: absolute;
+            top: -35px;
+            width: 100%;
+            text-align: center;
+            font-size: 9px;
+            color: #fff;
+        }
+
+        #intro-box, #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.96);
+            color: #4a1d4d;
+            padding: 20px;
+            text-align: center;
+            border: 4px solid #ffb700;
+            width: 85%;
+            z-index: 20;
+            box-shadow: 6px 6px 0px #4a1d4d;
+        }
+
+        p { line-height: 1.8; font-size: 9px; margin-bottom: 12px; }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            padding: 10px;
+            cursor: pointer;
+            border: 3px solid #4a1d4d;
+            background: #ffb700;
+            color: #fff;
+            font-size: 8px;
+            margin: 5px;
+        }
+
+        #controls {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 8px;
+            margin-top: 25px;
+        }
+
+        .btn-touch {
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 183, 0, 0.2);
+            border: 2px solid #ffb700;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffb700;
+            font-size: 18px;
+        }
+
+        .btn-touch:active { background: rgba(255, 183, 0, 0.5); }
+
+        .heart-rain { position: absolute; pointer-events: none; z-index: 100; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="ui">LUZ DE GIRASOL: <span id="score">0</span>%</div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div id="intro-box">
+            <h2 style="font-size: 11px;">PARA: GABY</h2>
+            <p>Ma petite Gaby, en el jardín infinito del espacio, eras la única semilla de luz.</p>
+            <p>Como un girasol busca el sol, mi alma solo sabe girar hacia ti.</p>
+            <p>Atrapa los 10 pétalos dorados para que mi mundo vuelva a florecer.</p>
+            <button onclick="startGame()">EMPEZAR VIAJE</button>
+        </div>
+
+        <div id="message-box" style="display:none;">
+            <h2 style="font-size: 11px;">¡FLORECISTE EN MI CORAZÓN!</h2>
+            <p>Mon Tournesol, gracias por iluminar mi galaxia con tu sonrisa.</p>
+            <p>No necesito estrellas si te tengo a mi lado.</p>
+            <p>Gaby, ¿me harías el honor de ser mi San Valentín?</p>
+            <button onclick="responder()">¡OUI, MIL VECES SÍ! 🌻</button>
+            <button id="btnNo" ontouchstart="escapar()" onmouseover="escapar()">NO</button>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="btn-touch" style="grid-area: up" id="up">↑</div>
+        <div class="btn-touch" style="grid-area: left" id="left">←</div>
+        <div class="btn-touch" style="grid-area: right" id="right">→</div>
+        <div class="btn-touch" style="grid-area: down" id="down">↓</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        
+        let score = 0;
+        let gameActive = false;
+        let stars = Array.from({length: 40}, () => ({ x: Math.random()*400, y: Math.random()*400, size: Math.random()*2 }));
+
+        const player = { x: 190, y: 190, size: 28, speed: 5 };
+        let goal = { x: 100, y: 100, size: 24 };
+        const keys = {};
+        const touchKeys = { 'ArrowUp': false, 'ArrowDown': false, 'ArrowLeft': false, 'ArrowRight': false };
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let musicPlaying = false;
+
+        function playSound(f, t, d, v = 0.1) {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+            g.gain.setValueAtTime(v, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(); o.stop(audioCtx.currentTime + d);
+        }
+
+        const melody = [261, 329, 392, 523, 440, 349, 392, 329];
+        function playMusic(step) {
+            if (!musicPlaying) return;
+            playSound(melody[step % melody.length], 'triangle', 0.6, 0.03);
+            setTimeout(() => playMusic(step + 1), 600);
+        }
+
+        const setupBtn = (id, key) => {
+            const el = document.getElementById(id);
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); touchKeys[key] = true; });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); touchKeys[key] = false; });
+        };
+        setupBtn('up', 'ArrowUp'); setupBtn('down', 'ArrowDown');
+        setupBtn('left', 'ArrowLeft'); setupBtn('right', 'ArrowRight');
+
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        function drawHeart(x, y, size, color) {
+            ctx.fillStyle = color; const p = size / 8;
+            const map = [[0,1,1,0,0,1,1,0],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1],[0,1,1,1,1,1,1,0],[0,0,1,1,1,1,0,0],[0,0,0,1,1,0,0,0]];
+            map.forEach((r, ri) => r.forEach((v, ci) => { if(v) ctx.fillRect(x+ci*p, y+ri*p, p, p); }));
+        }
+
+        function drawSunflower(x, y, size) {
+            const p = size / 8;
+            ctx.fillStyle = "#FFD700"; 
+            ctx.fillRect(x+p*2, y, p*4, p); ctx.fillRect(x, y+p*2, p, p*4); 
+            ctx.fillRect(x+p*7, y+p*2, p, p*4); ctx.fillRect(x+p*2, y+p*7, p*4, p);
+            ctx.fillStyle = "#5D4037"; ctx.fillRect(x+p*2, y+p*2, p*4, p*4);
+        }
+
+        function update() {
+            if (!gameActive) return;
+            if ((keys['ArrowUp'] || touchKeys['ArrowUp']) && player.y > 0) player.y -= player.speed;
+            if ((keys['ArrowDown'] || touchKeys['ArrowDown']) && player.y < 370) player.y += player.speed;
+            if ((keys['ArrowLeft'] || touchKeys['ArrowLeft']) && player.x > 0) player.x -= player.speed;
+            if ((keys['ArrowRight'] || touchKeys['ArrowRight']) && player.x < 370) player.x += player.speed;
+
+            if (Math.abs(player.x - goal.x) < 25 && Math.abs(player.y - goal.y) < 25) {
+                score++;
+                playSound(523, 'square', 0.2);
+                scoreElement.innerText = score * 10;
+                goal.x = Math.random() * 340; goal.y = Math.random() * 340;
+                if (score >= 10) { 
+                    gameActive = false; 
+                    musicPlaying = false;
+                    playSound(659, 'square', 0.5);
+                    document.getElementById('message-box').style.display = 'block'; 
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = '#1a0a1d'; ctx.fillRect(0, 0, 400, 400);
+            ctx.fillStyle = "#fff"; stars.forEach(s => { ctx.globalAlpha = Math.abs(Math.sin(Date.now()*0.002)); ctx.fillRect(s.x, s.y, s.size, s.size); });
+            ctx.globalAlpha = 1.0;
+            drawSunflower(goal.x, goal.y, goal.size);
+            drawHeart(player.x, player.y, player.size, '#ff4d6d');
+            update(); requestAnimationFrame(animate);
+        }
+
+        function startGame() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            if(!musicPlaying) { musicPlaying = true; playMusic(0); }
+            document.getElementById('intro-box').style.display = 'none';
+            gameActive = true;
+        }
+        
+        function escapar() {
+            const b = document.getElementById('btnNo');
+            b.style.position = 'fixed'; b.style.left = Math.random()*60+20+'%'; b.style.top = Math.random()*60+20+'%';
+            playSound(100, 'sawtooth', 0.1);
+        }
+
+        function responder() {
+            musicPlaying = false;
+            playSound(523, 'square', 0.2); setTimeout(()=>playSound(659, 'square', 0.2), 100);
+            document.getElementById('message-box').innerHTML = "<h2 style='font-size:12px'>¡SABÍA QUE NUESTRAS ALMAS ESTABAN CONECTADAS! ❤️</h2><p>Te amo, Gaby. Prepárate para la mejor cita de la historia.</p>";
+            for(let i=0; i<40; i++) {
+                const h = document.createElement('div'); h.className = 'heart-rain';
+                h.innerHTML = i%2==0?'🌻':'❤️'; h.style.left = Math.random()*100+'vw';
+                h.style.animationDuration = (Math.random()*2+2)+'s'; document.body.appendChild(h);
+            }
+        }
+        animate();
+    </script>
+</body>
+</html>
